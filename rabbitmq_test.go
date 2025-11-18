@@ -374,7 +374,7 @@ func TestRabbitMQ_Publish(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err = rmq.SafePublish("", "test", "Test message")
+		err = rmq.SafePublish("", "test", "", "Test message")
 		if err != nil {
 			t.Fatal(err, "message could be published")
 		}
@@ -401,7 +401,7 @@ func TestRabbitMQ_Publish(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err := rmq.SafePublish("Exchange", "test", "Test message")
+		err := rmq.SafePublish("Exchange", "test", "", "Test message")
 		if err == nil || !strings.Contains(err.Error(), "Exchange is not exist") {
 		}
 	})
@@ -414,7 +414,7 @@ func TestRabbitMQ_Publish(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err := rmq.SafePublish("", "test", "Test message")
+		err := rmq.SafePublish("", "test", "", "Test message")
 		if err != nil {
 			t.Fatal("message should be published")
 		}
@@ -435,7 +435,7 @@ func TestRabbitMQ_Publish(t *testing.T) {
 
 		rmq.publishCh.Close()
 
-		err = rmq.SafePublish("", "test", "Test message")
+		err = rmq.SafePublish("", "test", "", "Test message")
 		if err != nil {
 			t.Fatal(err, "message could be published")
 		}
