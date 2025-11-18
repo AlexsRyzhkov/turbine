@@ -1,4 +1,4 @@
-module gitlab.com/turbine
+module github.com/AlexsRyzhkov/turbine
 
 go 1.24.3
 
