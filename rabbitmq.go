@@ -12,6 +12,7 @@ import (
 type OutgoingMessage struct {
 	Exchange   string
 	RoutingKey string
+	ReplyTo    string
 	Body       []byte
 }
 
@@ -187,7 +188,7 @@ func (r *RabbitMQ) Disconnect() error {
 	return nil
 }
 
-func (r *RabbitMQ) SafePublish(exchange, routingKey, body string) error {
+func (r *RabbitMQ) SafePublish(exchange, routingKey, replyTo, body string) error {
 	if r.conn == nil {
 		return fmt.Errorf("[RabbitMQ:%s] is disconnected", r.url)
 	}
@@ -204,6 +205,7 @@ func (r *RabbitMQ) SafePublish(exchange, routingKey, body string) error {
 		r.pending <- OutgoingMessage{
 			Exchange:   exchange,
 			RoutingKey: routingKey,
+			ReplyTo:    replyTo,
 			Body:       []byte(body),
 		}
 	}
@@ -211,7 +213,7 @@ func (r *RabbitMQ) SafePublish(exchange, routingKey, body string) error {
 	return nil
 }
 
-func (r *RabbitMQ) unsafePublish(exchange, routingKey, body string) error {
+func (r *RabbitMQ) unsafePublish(exchange, routingKey, replyTo, body string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -233,8 +235,20 @@ func (r *RabbitMQ) unsafePublish(exchange, routingKey, body string) error {
 		false,
 		false,
 		amqp091.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(body),
+			Headers:         amqp091.Table{},    // type Table map[string]interface{}
+			ContentType:     "text/plain",       // MIME content type
+			ContentEncoding: "",                 // MIME content encoding
+			DeliveryMode:    amqp091.Persistent, // Transient (0 or 1) or Persistent (2)
+			Priority:        0,                  // 0 to 9
+			CorrelationId:   "",                 // correlation identifier
+			ReplyTo:         replyTo,            // address to reply to (ex: RPC)
+			Expiration:      "",                 // message expiration spec
+			MessageId:       "",                 // message identifier
+			Timestamp:       time.Now(),         // message timestamp
+			Type:            "application/json", // message type name
+			UserId:          "",                 // creating user id - ex: "guest"
+			AppId:           "",                 // creating application id
+			Body:            []byte(body),       // The application specific payload of the message
 		},
 	)
 }
@@ -271,7 +285,7 @@ func (r *RabbitMQ) publishWorker() {
 
 		for msg := range r.pending {
 			for {
-				err := r.unsafePublish(msg.Exchange, msg.RoutingKey, string(msg.Body))
+				err := r.unsafePublish(msg.Exchange, msg.RoutingKey, msg.ReplyTo, string(msg.Body))
 				if err != nil {
 					r.logger.Warnf("[RabbitMQ:%s] publish fail: %s (retry...)", msg.Exchange, err.Error())
 					time.Sleep(r.waitTime)

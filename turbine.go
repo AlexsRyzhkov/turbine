@@ -151,7 +151,7 @@ func (r *RabbitMQPool) Subscribe(path string, handler Handler, numWorkers int) e
 	return nil
 }
 
-func (r *RabbitMQPool) Publish(path string, data string) error {
+func (r *RabbitMQPool) Publish(path, data, replyTo string) error {
 	client, ok := r.pathToClient["publisher."+path]
 	if !ok {
 		return fmt.Errorf("[RabbitMQPool:%s] Client not found!", path)
@@ -159,7 +159,11 @@ func (r *RabbitMQPool) Publish(path string, data string) error {
 
 	publisher := r.publishers[path]
 
-	return client.SafePublish(publisher.Exchange, publisher.RoutingKey, data)
+	if replyTo == "" {
+		replyTo = publisher.ReplyTo
+	}
+
+	return client.SafePublish(publisher.Exchange, publisher.RoutingKey, replyTo, data)
 }
 
 type MiddlewareFunc func(next Handler) Handler

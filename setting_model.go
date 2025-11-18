@@ -24,4 +24,5 @@ type RabbitPublish struct {
 	Alias      string `conf:"alias"`
 	Exchange   string `conf:"exchange"`
 	RoutingKey string `conf:"routingKey"`
+	ReplyTo    string `conf:"replyTo"`
 }
