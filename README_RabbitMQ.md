@@ -20,7 +20,7 @@
 ## 📦 Установка
 
 ```bash
-go get github.com/your_project/turbine
+go get github.com/AlexsRyzhkov/turbine
 ```
 
 ---
