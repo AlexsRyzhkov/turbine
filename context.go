@@ -4,11 +4,11 @@ import "context"
 
 type Context struct {
 	context context.Context
-	message string
+	body    string
 }
 
-func (c *Context) Message() string {
-	return c.message
+func (c *Context) Body() string {
+	return c.body
 }
 
 func (c *Context) Context() context.Context {
