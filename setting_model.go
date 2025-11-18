@@ -9,6 +9,7 @@ type RabbitConnect struct {
 	Host  string `conf:"host"`
 	Login string `conf:"login"`
 	Pass  string `conf:"pass"`
+	Port  string `conf:"port"`
 	Vhost string `conf:"vHost"`
 
 	Consumers  []RabbitConsumer `conf:"input"`

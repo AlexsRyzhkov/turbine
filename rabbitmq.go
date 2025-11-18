@@ -167,7 +167,6 @@ func (r *RabbitMQ) Disconnect() error {
 	r.cancelWorkerFn()
 	r.wgPending.Wait()
 	close(r.pending)
-	close(r.confirms)
 	r.wgWorker.Wait()
 
 	if r.publishCh != nil {
@@ -183,6 +182,8 @@ func (r *RabbitMQ) Disconnect() error {
 	}
 
 	r.conn = nil
+	r.adminCh = nil
+	r.publishCh = nil
 	r.logger.Infof("[RabbitMQ:%s], disconnect", r.url)
 
 	return nil

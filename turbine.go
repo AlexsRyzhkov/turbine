@@ -50,19 +50,21 @@ func NewRabbitMQPool(setting RabbitSetting, logger ILogger) *RabbitMQPool {
 	}
 }
 
-func (r *RabbitMQPool) Connect() {
+func (r *RabbitMQPool) Connect() error {
 	for _, connect := range r.setting.Connects {
 		r.clients[connect.Alias] = NewRabbitMQ(fmt.Sprintf(
-			"amqp://%s:%s@%s:5672/%s",
+			"amqp://%s:%s@%s:%s/%s",
 			connect.Login,
 			connect.Pass,
 			connect.Host,
+			connect.Port,
 			connect.Vhost,
 		), r.logger)
 
 		err := r.clients[connect.Alias].Connect()
 		if err != nil {
 			r.Disconnect()
+			return err
 		}
 
 		for _, consumer := range connect.Consumers {
@@ -78,11 +80,15 @@ func (r *RabbitMQPool) Connect() {
 		r.ctxCancelWorker = ctx
 		r.cancelWorkerFn = cancel
 	}
+
+	return nil
 }
 
 func (r *RabbitMQPool) Disconnect() {
-	r.cancelWorkerFn()
-	r.wgWorker.Wait()
+	if r.cancelWorkerFn != nil {
+		r.cancelWorkerFn()
+		r.wgWorker.Wait()
+	}
 
 	wg := sync.WaitGroup{}
 
@@ -96,6 +102,7 @@ func (r *RabbitMQPool) Disconnect() {
 
 	wg.Wait()
 
+	r.ctxCancelWorker = nil
 	r.clients = make(map[string]*RabbitMQ)
 }
 
